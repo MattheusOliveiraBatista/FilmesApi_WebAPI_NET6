@@ -14,7 +14,7 @@ public class FilmeController : ControllerBase
     private static int id = 0;
 
     [HttpPost]
-    public void AdicionaFilme([FromBody] Filme filme )
+    public IActionResult AdicionaFilme([FromBody] Filme filme )
     {
         // if (!string.IsNullOrEmpty(filme.Titulo) && filme.Titulo.Length <= 500 &&
         //      !string.IsNullOrEmpty(filme.Genero) &&
@@ -22,32 +22,31 @@ public class FilmeController : ControllerBase
 
 
         filme.Id = id++;
-
         filmes.Add(filme);
-        Console.WriteLine(filme.Titulo);
-        Console.WriteLine(filme.Duracao);
-
-
-
-
+        return CreatedAtAction(nameof(RecuperaFilmePorId), 
+                        new { id = filme.Id },
+                        filme);
     }
-    [HttpGet]
-    //public IEnumerable<Filme> RecuperaFilmes[FromQuery] int skip, int take)
 
-    public IEnumerable<Filme> RecuperaFilmes()
+
+
+    [HttpGet]
+    public IEnumerable<Filme> RecuperaFilmes([FromQuery] int skip = 0, int take = 50)
+    //public IEnumerable<Filme> RecuperaFilmes()
     {
-        return filmes;
         //skip = quantos ele quer pular
         //take = quantos ele quer pegar
-        //return filmes.Skip(skip).Take(take);
+        return filmes.Skip(skip).Take(take);
     }
 
 
     //A interrogação siginifica que ele é nulo
     [HttpGet("{id}")]
-    public Filme? RecuperaFilmes(int id)
+    public IActionResult RecuperaFilmePorId(int id)
     {
-        return filmes.FirstOrDefault(filme => filme.Id == id);
+        var filme =  filmes.FirstOrDefault(filme => filme.Id == id);
+        if (filme == null) return NotFound();
+        return Ok(filme);
     }
 
 }
