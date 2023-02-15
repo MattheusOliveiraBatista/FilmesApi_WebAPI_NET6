@@ -23,7 +23,17 @@ public class FilmeController : ControllerBase
         _context = context;
         _mapper = mapper;
     }
+
+
+    /// <summary>
+    /// Adiciona um filme ao banco de dados
+    /// </summary>
+    /// <param name="filmeDto">Objeto com os campos necessários para criação de um filme</param>
+    /// <returns>IActionResult</returns>
+    /// <response code="201">Caso inserção seja feita com sucesso</response>
+    /// 
     [HttpPost]
+    [ProducesResponseType(StatusCodes.Status201Created)]
     public IActionResult AdicionaFilme([FromBody] CreateFilmeDto filmeDto )
     {
         // if (!string.IsNullOrEmpty(filme.Titulo) && filme.Titulo.Length <= 500 &&
@@ -44,13 +54,13 @@ public class FilmeController : ControllerBase
 
 
     [HttpGet]
-    public IEnumerable<Filme> RecuperaFilmes([FromQuery] int skip = 0, int take = 50)
+    public IEnumerable<ReadFilmeDto> RecuperaFilmes([FromQuery] int skip = 0, int take = 50)
     //public IEnumerable<Filme> RecuperaFilmes()
     {
         //skip = quantos ele quer pular
         //take = quantos ele quer pegar
         //return filmes.Skip(skip).Take(take);
-        return _context.Filmes.Skip(skip).Take(take);
+        return _mapper.Map<List<ReadFilmeDto>>(_context.Filmes.Skip(skip).Take(take));
     }
 
 
@@ -62,7 +72,9 @@ public class FilmeController : ControllerBase
         var filme = _context.Filmes
                 .FirstOrDefault(filme => filme.Id == id);
         if (filme == null) return NotFound();
-        return Ok(filme);
+
+        var filmeDto = _mapper.Map<ReadFilmeDto>( filme);
+        return Ok(filmeDto);
     }
 
     [HttpPut("{id}")]
@@ -102,6 +114,19 @@ public class FilmeController : ControllerBase
         _mapper.Map(filmeParaAtualizar, filme);
         _context.SaveChanges();
 
+        return NoContent();
+    }
+
+
+    [HttpDelete("{id}")]
+    public IActionResult DeletaFilme(int id)
+    {
+        var filme = _context.Filmes.FirstOrDefault(
+            filme => filme.Id == id);
+
+        if (filme == null) return NotFound();
+        _context.Remove(filme);
+        _context.SaveChanges();
         return NoContent();
     }
 
